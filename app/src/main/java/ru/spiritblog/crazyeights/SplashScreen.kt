@@ -14,17 +14,24 @@ public class SplashScreen(context: Context) : View(context) {
 
 
     private lateinit var titleG: Bitmap
+    private var scrW: Int = 0
+    private var scrH: Int = 0
 
     init {
         titleG = BitmapFactory.decodeResource(resources, R.drawable.splash_graphic)
     }
 
 
-
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        scrW = w
+        scrH = h
+    }
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
-       canvas?.drawBitmap(titleG, 100F, 100F, null)
+        var titleGLeftPos = (scrW - titleG.width) / 2
+        canvas?.drawBitmap(titleG, titleGLeftPos.toFloat(), 100F, null)
     }
 
 
