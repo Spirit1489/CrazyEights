@@ -1,6 +1,7 @@
 package ru.spiritblog.crazyeights
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.*
 import android.util.Log
 import android.view.MotionEvent
@@ -11,6 +12,10 @@ private const val TAG = "SplashScreen"
 
 
 public class SplashScreen(context: Context) : View(context) {
+
+
+    private var ctx: Context = context
+
 
     // Title
     private lateinit var titleG: Bitmap
@@ -90,7 +95,12 @@ public class SplashScreen(context: Context) : View(context) {
             MotionEvent.ACTION_UP -> {
                 if (playBtnPressed) {
                     // Launch main game screen
+                    var gameIntent = Intent(ctx, CrazyEightActivity::class.java)
+                    ctx.startActivity(gameIntent)
+
                 }
+
+                playBtnPressed = false
 
             }
 
