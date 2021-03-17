@@ -6,14 +6,19 @@ import android.graphics.Bitmap
 class Card(newId: Int) {
 
 
-    private var id = newId
-    private var suit = 0
-    private var rank = 0
+    var id = newId
+    var suit = 0
+    var rank = 0
 
     lateinit var bmp: Bitmap
 
-
     private var scoreValue = 0
+
+
+    init {
+        suit = Math.round((id / 100) * 100.toDouble()).toInt()
+        rank = id - suit
+    }
 
 
 }
