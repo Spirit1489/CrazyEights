@@ -45,4 +45,43 @@ public class ComputerPlayer {
     }
 
 
+    fun chooseSuit(hand: List<Card>): Int {
+        var suit = 100
+        var numDiamonds = 0
+        var numClubs = 0
+        var numHearts = 0
+        var numSpades = 0
+        for (i in hand.indices) {
+            val tempRank = hand[i].rank
+            val tempSuit = hand[i].suit
+            if (tempRank != 8) {
+                if (tempSuit == 100) {
+                    numDiamonds++
+                } else if (tempSuit == 200) {
+                    numClubs++
+                } else if (tempSuit == 300) {
+                    numHearts++
+                } else if (tempSuit == 400) {
+                    numSpades++
+                }
+            }
+        }
+        if (numClubs > numDiamonds && numClubs > numHearts && numClubs > numSpades) {
+            suit = 200
+        } else if (numHearts > numDiamonds && numHearts > numClubs && numHearts > numSpades) {
+            suit = 300
+        } else if (numSpades > numDiamonds && numSpades > numClubs && numSpades > numHearts) {
+            suit = 400
+        }
+        return suit
+    }
+
+
+
+
+
+
+
+
+
 }

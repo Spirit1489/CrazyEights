@@ -2,18 +2,12 @@ package ru.spiritblog.crazyeights
 
 import android.app.Dialog
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Paint
+import android.graphics.*
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.Window
-import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.Spinner
-import android.widget.Toast
+import android.widget.*
 import java.util.*
 
 class CrazyEightView(context: Context) : View(context) {
@@ -38,6 +32,21 @@ class CrazyEightView(context: Context) : View(context) {
     private var validRank = 8
     private var validSuit = 0
     private lateinit var nextCardBtn: Bitmap
+    private var computerScore = 0
+    private var myScore = 0
+    private var currScore = 0
+
+
+    init {
+
+        paint.isAntiAlias = true
+        paint.color = Color.BLACK
+        paint.style = Paint.Style.FILL
+        paint.textAlign = Paint.Align.LEFT
+        paint.textSize = scale * 15
+
+
+    }
 
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -137,9 +146,47 @@ class CrazyEightView(context: Context) : View(context) {
             if (tempPlay == 0) {
                 drawCard(computerHand)
             }
+        }
 
+        if (tempPlay == 108 || tempPlay == 208 || tempPlay == 308 || tempPlay == 408) {
+
+            validRank = 8
+            validSuit = computerPlayer.chooseSuit(computerHand)
+            var suitText = ""
+            if (validSuit == 100) {
+                suitText = "Diamonds"
+            } else if (validSuit == 200) {
+                suitText = "Clubs"
+            } else if (validSuit == 300) {
+                suitText = "Hearts"
+            } else if (validSuit == 400) {
+                suitText = "Spades"
+            }
+
+            Toast.makeText(ctx, "Computer chose $suitText", Toast.LENGTH_SHORT).show()
+
+        } else {
+            validSuit = Math.round(((tempPlay / 100) * 100).toDouble()).toInt()
+            validRank = tempPlay - validSuit
+        }
+
+        for (i in 0 until computerHand.size) {
+            var tempCard = computerHand[i]
+            if (tempPlay == tempCard.id) {
+                discardPile.add(0, computerHand[i])
+                computerHand.removeAt(i)
+                break
+            }
 
         }
+
+
+        if (computerHand.isEmpty()) {
+            endHand()
+        }
+
+
+        myTurn = true
 
 
     }
@@ -239,6 +286,19 @@ class CrazyEightView(context: Context) : View(context) {
         }
 
 
+        // Draw scores
+
+        canvas.drawText(
+            "Opponent Score: $computerScore", 10F,
+            paint.textSize - 10, paint
+        )
+
+        canvas.drawText(
+            "My Score: $myScore", 10F,
+            scrH - paint.textSize - 10, paint
+        )
+
+
     }
 
 
@@ -298,6 +358,24 @@ class CrazyEightView(context: Context) : View(context) {
                             myTurn = false
                             computerPlay()
                         }
+                    }
+
+
+                }
+
+                if (movingIdx > -1 && myTurn &&
+                    X > (scrW / 2) - (100 * scale) &&
+                    X < (scrW / 2) + (100 * scale) &&
+                    Y > (scrH / 2) - (100 * scale) &&
+                    Y < (scrH / 2) + (100 * scale)
+                ) {
+
+                    if (isValidDraw()) {
+                        drawCard(playerHand)
+
+                    } else {
+                        Toast.makeText(ctx, "You have a valid play.", Toast.LENGTH_SHORT)
+                            .show()
                     }
 
 
@@ -369,8 +447,116 @@ class CrazyEightView(context: Context) : View(context) {
     }
 
 
-    private fun isValidDraw() {
-        
+    private fun isValidDraw(): Boolean {
+        var canDraw: Boolean = true
+        for (i in playerHand.indices) {
+            val tempId = playerHand[i].id
+            val tempRank = playerHand[i].rank
+            val tempSuit = playerHand[i].suit
+            if (validSuit == tempSuit || validRank == tempRank ||
+                tempId == 108 || tempId == 208 || tempId == 308 || tempId == 408
+            ) {
+                canDraw = false
+            }
+        }
+
+        return canDraw
+
+    }
+
+
+    private fun updateScores() {
+        for (i in playerHand.indices) {
+            computerScore += playerHand[i].getScoreValue()
+            currScore += playerHand[i].getScoreValue()
+        }
+
+        for (i in computerHand.indices) {
+            myScore += computerHand[i].getScoreValue()
+            currScore += computerHand[i].getScoreValue()
+        }
+
+
+    }
+
+
+    private fun endHand() {
+
+        var endHandMsg = ""
+        val endHandDlg: Dialog = Dialog(ctx)
+        endHandDlg.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        endHandDlg.setContentView(R.layout.end_hand_dialog)
+        updateScores()
+
+
+        var endHandText: TextView = endHandDlg.findViewById(R.id.endHandText)
+        if (playerHand.isEmpty()) {
+            if (myScore >= 300) {
+                endHandMsg = String.format("You won. You have %d points. Play again?", myScore)
+            } else {
+                endHandMsg = String.format("You lost, you only got %d", currScore)
+            }
+        } else if (computerHand.isEmpty()) {
+            if (computerScore >= 300) {
+                endHandMsg = String.format(
+                    "Opponent scored %d. You lost. Play again?",
+                    computerScore
+                )
+            } else {
+                endHandMsg = String.format("Opponent has lost. He scored %d points.", currScore)
+            }
+            endHandText.text = endHandMsg
+        }
+
+
+        var nextHandBtn: Button = endHandDlg.findViewById(R.id.nextHandButton)
+
+        if (computerScore >= 300 || myScore >= 300) {
+            nextHandBtn.text = "New Game"
+        }
+
+
+
+        nextHandBtn.setOnClickListener {
+            if (computerScore >= 300 || myScore >= 300) {
+                myScore = 0
+                computerScore = 0
+            }
+
+            initNewHand()
+            endHandDlg.dismiss()
+
+
+        }
+
+        endHandDlg.show()
+
+
+    }
+
+
+    private fun initNewHand() {
+        currScore = 0
+
+        if (playerHand.isEmpty()) {
+            myTurn = true
+        } else if (computerHand.isEmpty()) {
+            myTurn = false
+        }
+
+        deck.addAll(discardPile)
+        deck.addAll(playerHand)
+        deck.addAll(computerHand)
+        discardPile.clear()
+        playerHand.clear()
+        computerHand.clear()
+        dealCards()
+        drawCard(discardPile)
+        validSuit = discardPile[0].suit
+        validRank = discardPile[0].rank
+        if (!myTurn) {
+            computerPlay()
+        }
 
     }
 
